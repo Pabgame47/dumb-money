@@ -15,7 +15,14 @@
         <span class="brand-icon">🎨</span>
         <span class="brand-name">PixelCanvas</span>
       </div>
+
+      <div class="live-badge">
+        <span class="live-dot"></span>
+        LIVE
+      </div>
+
       <div class="tagline">100,000,000 pixels · $1 each · $100M canvas</div>
+
       <div class="stats-bar">
         <div class="stat">
           <span class="stat-value" id="pixelsSold">0</span>
@@ -33,6 +40,10 @@
         </div>
       </div>
     </div>
+    <!-- progress bar fill -->
+    <div class="progress-strip">
+      <div class="progress-fill" id="progressFill" style="width:0%"></div>
+    </div>
   </header>
 
   <!-- MAIN -->
@@ -41,6 +52,7 @@
 
       <!-- CANVAS AREA -->
       <div class="canvas-area">
+
         <!-- Coords bar -->
         <div class="coords-bar">
           <span id="coordsDisplay">Viewport: (0, 0) of 10,000 × 10,000</span>
@@ -55,6 +67,10 @@
         <!-- Canvas + tooltip -->
         <div class="canvas-wrap">
           <canvas id="pixelCanvas" width="800" height="800"></canvas>
+          <span class="canvas-corner tl">0,0</span>
+          <span class="canvas-corner tr">10k,0</span>
+          <span class="canvas-corner bl">0,10k</span>
+          <span class="canvas-corner br">10k,10k</span>
           <div id="tooltip" class="tooltip hidden"></div>
         </div>
 
@@ -73,6 +89,7 @@
           </div>
           <div class="nav-hint">Drag · Scroll · Arrow keys · Shift = ×10</div>
         </div>
+
       </div>
 
       <!-- SIDEBAR -->
@@ -80,7 +97,7 @@
 
         <div class="card info-card">
           <div class="price-badge">$1 <span>/pixel</span></div>
-          <h2>100 million pixels. One canvas. Forever.</h2>
+          <h2>100 million pixels.<br/>One canvas. Forever.</h2>
           <p>Buy any pixel. Pick your color. Link to anything. Your mark stays on the canvas forever.</p>
           <ul class="feature-list">
             <li><span class="feat-icon">🗺️</span> 10,000 × 10,000 grid</li>
@@ -88,14 +105,14 @@
             <li><span class="feat-icon">🔗</span> Link to your site</li>
             <li><span class="feat-icon">♾️</span> Permanent spot</li>
           </ul>
-          <button class="btn-primary" id="btnBuyRandom">Claim a Pixel →</button>
+          <button class="btn-primary" id="btnBuyRandom">🚀 Claim a Pixel →</button>
         </div>
 
         <!-- Minimap -->
         <div class="card minimap-card">
           <h3>🗺️ Full canvas overview</h3>
           <div class="minimap-wrap">
-            <canvas id="minimap" width="200" height="200"></canvas>
+            <canvas id="minimap" width="250" height="250"></canvas>
           </div>
           <p class="minimap-hint">White box = current view · Colored dots = claimed pixels</p>
         </div>

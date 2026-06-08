@@ -13,6 +13,7 @@ const STORAGE_KEY = 'pixelcanvas_v2';
 let pixels = {};
 let viewX = 0, viewY = 0;   // viewport top-left in grid coords
 let pendingCell = null;
+let hoverCell = null;        // currently hovered grid cell
 
 // Drag/pan state
 let isDragging = false, hasDragged = false;
@@ -103,12 +104,12 @@ function seedDemoPixels() {
     { x:5, y:6, n:'PixelPete',   c:'#ff6b35', u:'https://example.com', m:'First pixel ever!' },
     { x:6, y:6, n:'PixelPete',   c:'#ff6b35', u:'https://example.com', m:'First pixel ever!' },
 
-    { x:15, y:8, n:'CoolBrand™',  c:'#4ecdc4', u:'https://example.com', m:'We make cool things.' },
-    { x:16, y:8, n:'CoolBrand™',  c:'#4ecdc4', u:'https://example.com', m:'We make cool things.' },
-    { x:17, y:8, n:'CoolBrand™',  c:'#4ecdc4', u:'https://example.com', m:'We make cool things.' },
-    { x:15, y:9, n:'CoolBrand™',  c:'#4ecdc4', u:'https://example.com', m:'We make cool things.' },
-    { x:16, y:9, n:'CoolBrand™',  c:'#4ecdc4', u:'https://example.com', m:'We make cool things.' },
-    { x:17, y:9, n:'CoolBrand™',  c:'#4ecdc4', u:'https://example.com', m:'We make cool things.' },
+    { x:15, y:8, n:'CoolBrand',  c:'#4ecdc4', u:'https://example.com', m:'We make cool things.' },
+    { x:16, y:8, n:'CoolBrand',  c:'#4ecdc4', u:'https://example.com', m:'We make cool things.' },
+    { x:17, y:8, n:'CoolBrand',  c:'#4ecdc4', u:'https://example.com', m:'We make cool things.' },
+    { x:15, y:9, n:'CoolBrand',  c:'#4ecdc4', u:'https://example.com', m:'We make cool things.' },
+    { x:16, y:9, n:'CoolBrand',  c:'#4ecdc4', u:'https://example.com', m:'We make cool things.' },
+    { x:17, y:9, n:'CoolBrand',  c:'#4ecdc4', u:'https://example.com', m:'We make cool things.' },
 
     { x:40, y:20, n:'TinyAds.io', c:'#f7dc6f', u:'https://example.com', m:'Tiny ads, big reach.' },
     { x:41, y:20, n:'TinyAds.io', c:'#f7dc6f', u:'https://example.com', m:'Tiny ads, big reach.' },
@@ -139,7 +140,7 @@ function seedDemoPixels() {
 
 // ── CANVAS DRAWING ────────────────────────
 function drawCanvas() {
-  ctx.fillStyle = '#0d0d1a';
+  ctx.fillStyle = '#08081a';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   for (let cy = 0; cy < VIEWPORT; cy++) {
@@ -147,10 +148,27 @@ function drawCanvas() {
       const gx = cx + viewX;
       const gy = cy + viewY;
       const k  = `${gx},${gy}`;
-      ctx.fillStyle = pixels[k]
-        ? pixels[k].color
-        : (gx + gy) % 2 === 0 ? '#111126' : '#0f0f22';
-      ctx.fillRect(cx * CELL, cy * CELL, CELL - 1, CELL - 1);
+      const isHovered = hoverCell && hoverCell.cx === cx && hoverCell.cy === cy;
+
+      if (pixels[k]) {
+        ctx.fillStyle = pixels[k].color;
+        ctx.fillRect(cx * CELL, cy * CELL, CELL - 1, CELL - 1);
+        // Subtle shine on claimed pixels
+        if (!isHovered) {
+          ctx.fillStyle = 'rgba(255,255,255,0.06)';
+          ctx.fillRect(cx * CELL, cy * CELL, CELL - 1, 2);
+        }
+      } else {
+        ctx.fillStyle = (gx + gy) % 2 === 0 ? '#0e0e24' : '#0b0b1e';
+        ctx.fillRect(cx * CELL, cy * CELL, CELL - 1, CELL - 1);
+      }
+
+      // Hover highlight
+      if (isHovered) {
+        ctx.strokeStyle = pixels[k] ? 'rgba(255,255,255,0.9)' : 'rgba(167,139,250,0.9)';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(cx * CELL + 0.5, cy * CELL + 0.5, CELL - 2, CELL - 2);
+      }
     }
   }
 }
@@ -160,17 +178,22 @@ function redrawCell(gx, gy) {
   const cy = gy - viewY;
   if (cx < 0 || cx >= VIEWPORT || cy < 0 || cy >= VIEWPORT) return;
   const k = `${gx},${gy}`;
-  ctx.fillStyle = pixels[k]
-    ? pixels[k].color
-    : (gx + gy) % 2 === 0 ? '#111126' : '#0f0f22';
-  ctx.fillRect(cx * CELL, cy * CELL, CELL - 1, CELL - 1);
+  if (pixels[k]) {
+    ctx.fillStyle = pixels[k].color;
+    ctx.fillRect(cx * CELL, cy * CELL, CELL - 1, CELL - 1);
+    ctx.fillStyle = 'rgba(255,255,255,0.06)';
+    ctx.fillRect(cx * CELL, cy * CELL, CELL - 1, 2);
+  } else {
+    ctx.fillStyle = (gx + gy) % 2 === 0 ? '#0e0e24' : '#0b0b1e';
+    ctx.fillRect(cx * CELL, cy * CELL, CELL - 1, CELL - 1);
+  }
 }
 
 // ── MINIMAP ───────────────────────────────
 function updateMinimap() {
-  const MW = minimap.width;   // 200
-  const MH = minimap.height;  // 200
-  const scale = MW / GRID;    // pixels per grid cell in minimap
+  const MW = minimap.width;
+  const MH = minimap.height;
+  const scale = MW / GRID;
 
   mctx.fillStyle = '#0d0d1a';
   mctx.fillRect(0, 0, MW, MH);
@@ -251,6 +274,7 @@ function onMouseMove(e) {
       hasDragged = true;
       viewX = Math.max(0, Math.min(GRID - VIEWPORT, dragViewStart.x - dx));
       viewY = Math.max(0, Math.min(GRID - VIEWPORT, dragViewStart.y - dy));
+      hoverCell = null;
       drawCanvas();
       updateMinimap();
       updateCoords();
@@ -260,7 +284,17 @@ function onMouseMove(e) {
   }
 
   const cell = cellFromEvent(e);
-  if (!cell) { hideTooltip(); return; }
+  if (!cell) {
+    if (hoverCell) { hoverCell = null; drawCanvas(); }
+    hideTooltip();
+    return;
+  }
+
+  // Update hover highlight if cell changed
+  if (!hoverCell || hoverCell.cx !== cell.cx || hoverCell.cy !== cell.cy) {
+    hoverCell = { cx: cell.cx, cy: cell.cy };
+    drawCanvas();
+  }
 
   canvas.style.cursor = pixels[`${cell.x},${cell.y}`] ? 'pointer' : 'crosshair';
   updateCoords(cell.x, cell.y);
@@ -296,6 +330,7 @@ function onMouseUp(e) {
 
 function onMouseLeave() {
   isDragging = false;
+  if (hoverCell) { hoverCell = null; drawCanvas(); }
   hideTooltip();
   canvas.style.cursor = 'crosshair';
 }
@@ -425,14 +460,12 @@ function flashCell(gx, gy) {
 
 // ── CLAIM RANDOM ──────────────────────────
 function claimRandom() {
-  // Pick a random empty pixel near current viewport
   const attempts = 200;
   for (let i = 0; i < attempts; i++) {
     const x = viewX + Math.floor(Math.random() * VIEWPORT);
     const y = viewY + Math.floor(Math.random() * VIEWPORT);
     if (!pixels[`${x},${y}`]) { openClaimModal(x, y); return; }
   }
-  // Fallback: fully random in the grid
   for (let i = 0; i < attempts; i++) {
     const x = Math.floor(Math.random() * GRID);
     const y = Math.floor(Math.random() * GRID);
@@ -443,11 +476,16 @@ function claimRandom() {
 // ── STATS ─────────────────────────────────
 function updateStats() {
   const sold  = Object.keys(pixels).length;
-  const total = GRID * GRID;  // 100,000,000
+  const total = GRID * GRID;
   const left  = total - sold;
   document.getElementById('pixelsSold').textContent    = sold.toLocaleString();
   document.getElementById('revenueEarned').textContent = '$' + sold.toLocaleString();
   document.getElementById('pixelsLeft').textContent    = left.toLocaleString();
+
+  // Update progress bar
+  const pct = (sold / total) * 100;
+  const bar = document.getElementById('progressFill');
+  if (bar) bar.style.width = Math.max(pct, pct > 0 ? 0.05 : 0) + '%';
 }
 
 // ── RECENT ────────────────────────────────

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PixelCanvas — 100 Million Pixels · $1 Each</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-inner">
+      <div class="brand">
+        <span class="brand-icon">🎨</span>
+        <span class="brand-name">PixelCanvas</span>
+      </div>
+      <div class="tagline">100,000,000 pixels · $1 each · $100M canvas</div>
+      <div class="stats-bar">
+        <div class="stat">
+          <span class="stat-value" id="pixelsSold">0</span>
+          <span class="stat-label">sold</span>
+        </div>
+        <div class="stat-sep">·</div>
+        <div class="stat">
+          <span class="stat-value" id="revenueEarned">$0</span>
+          <span class="stat-label">earned</span>
+        </div>
+        <div class="stat-sep">·</div>
+        <div class="stat">
+          <span class="stat-value" id="pixelsLeft">100,000,000</span>
+          <span class="stat-label">left</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main>
+    <div class="layout">
+
+      <!-- CANVAS AREA -->
+      <div class="canvas-area">
+        <!-- Coords bar -->
+        <div class="coords-bar">
+          <span id="coordsDisplay">Viewport: (0, 0) of 10,000 × 10,000</span>
+          <div class="goto-wrap">
+            <span class="goto-label">Go to</span>
+            <input type="number" id="gotoX" placeholder="X" min="0" max="9999" />
+            <input type="number" id="gotoY" placeholder="Y" min="0" max="9999" />
+            <button id="btnGoto" class="btn-goto">→</button>
+          </div>
+        </div>
+
+        <!-- Canvas + tooltip -->
+        <div class="canvas-wrap">
+          <canvas id="pixelCanvas" width="800" height="800"></canvas>
+          <div id="tooltip" class="tooltip hidden"></div>
+        </div>
+
+        <!-- Navigation controls -->
+        <div class="nav-controls">
+          <div class="nav-grid">
+            <div></div>
+            <button class="nav-btn" id="navUp">▲</button>
+            <div></div>
+            <button class="nav-btn" id="navLeft">◀</button>
+            <div class="nav-center">·</div>
+            <button class="nav-btn" id="navRight">▶</button>
+            <div></div>
+            <button class="nav-btn" id="navDown">▼</button>
+            <div></div>
+          </div>
+          <div class="nav-hint">Drag · Scroll · Arrow keys · Shift = ×10</div>
+        </div>
+      </div>
+
+      <!-- SIDEBAR -->
+      <aside class="sidebar">
+
+        <div class="card info-card">
+          <div class="price-badge">$1 <span>/pixel</span></div>
+          <h2>100 million pixels. One canvas. Forever.</h2>
+          <p>Buy any pixel. Pick your color. Link to anything. Your mark stays on the canvas forever.</p>
+          <ul class="feature-list">
+            <li><span class="feat-icon">🗺️</span> 10,000 × 10,000 grid</li>
+            <li><span class="feat-icon">🖌️</span> Pick any color</li>
+            <li><span class="feat-icon">🔗</span> Link to your site</li>
+            <li><span class="feat-icon">♾️</span> Permanent spot</li>
+          </ul>
+          <button class="btn-primary" id="btnBuyRandom">Claim a Pixel →</button>
+        </div>
+
+        <!-- Minimap -->
+        <div class="card minimap-card">
+          <h3>🗺️ Full canvas overview</h3>
+          <div class="minimap-wrap">
+            <canvas id="minimap" width="200" height="200"></canvas>
+          </div>
+          <p class="minimap-hint">White box = current view · Colored dots = claimed pixels</p>
+        </div>
+
+        <div class="card recent-card">
+          <h3>🔥 Recently claimed</h3>
+          <div id="recentList" class="recent-list">
+            <p class="empty-state">No pixels claimed yet.<br/>Be the first!</p>
+          </div>
+        </div>
+
+        <div class="card leaderboard-card">
+          <h3>🏆 Top owners</h3>
+          <div id="leaderboard" class="leaderboard-list">
+            <p class="empty-state">Claim pixels to appear here.</p>
+          </div>
+        </div>
+
+      </aside>
+    </div>
+  </main>
+
+  <!-- MODAL OVERLAY -->
+  <div id="modalOverlay" class="modal-overlay hidden"></div>
+
+  <!-- CLAIM MODAL -->
+  <div id="modal" class="modal hidden">
+    <button class="modal-close" id="modalClose">✕</button>
+    <div class="modal-header">
+      <div class="modal-pixel-preview" id="modalPreview"></div>
+      <div>
+        <h2>Claim Pixel</h2>
+        <div class="modal-coords" id="modalCoords">–</div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="ownerName">Name / Brand *</label>
+      <input type="text" id="ownerName" placeholder="e.g. Pablo's Coffee Shop" maxlength="50" autocomplete="off" />
+    </div>
+    <div class="form-group">
+      <label for="ownerUrl">Link URL <span class="optional">(optional)</span></label>
+      <input type="url" id="ownerUrl" placeholder="https://yoursite.com" autocomplete="off" />
+    </div>
+    <div class="form-group">
+      <label for="ownerMessage">Tooltip Message <span class="optional">(optional)</span></label>
+      <input type="text" id="ownerMessage" placeholder="Click to visit!" maxlength="100" autocomplete="off" />
+    </div>
+    <div class="form-group">
+      <label>Color</label>
+      <div class="color-row">
+        <input type="color" id="ownerColor" value="#ff6b35" />
+        <div class="color-presets" id="colorPresets">
+          <div class="cp" style="background:#ff6b35" data-color="#ff6b35"></div>
+          <div class="cp" style="background:#4ecdc4" data-color="#4ecdc4"></div>
+          <div class="cp" style="background:#45b7d1" data-color="#45b7d1"></div>
+          <div class="cp" style="background:#f7dc6f" data-color="#f7dc6f"></div>
+          <div class="cp" style="background:#bb8fce" data-color="#bb8fce"></div>
+          <div class="cp" style="background:#58d68d" data-color="#58d68d"></div>
+          <div class="cp" style="background:#f1948a" data-color="#f1948a"></div>
+          <div class="cp" style="background:#aab7b8" data-color="#aab7b8"></div>
+          <div class="cp" style="background:#e74c3c" data-color="#e74c3c"></div>
+          <div class="cp" style="background:#ffffff" data-color="#ffffff"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <div class="modal-price">
+        <span class="price-total">$1.00</span>
+        <small class="demo-note">✨ Demo mode — claim free!</small>
+      </div>
+      <button class="btn-claim" id="btnClaim">🚀 Claim My Pixel</button>
+    </div>
+  </div>
+
+  <!-- INFO MODAL -->
+  <div id="infoModal" class="modal hidden">
+    <button class="modal-close" id="infoModalClose">✕</button>
+    <div class="modal-header">
+      <div class="modal-pixel-preview" id="infoPreview"></div>
+      <div>
+        <h2 id="infoName">–</h2>
+        <div class="modal-coords" id="infoCoords">–</div>
+      </div>
+    </div>
+    <p id="infoMessage" class="info-message"></p>
+    <a id="infoUrl" href="#" target="_blank" rel="noopener"
+       class="btn-primary" style="display:none; text-decoration:none; text-align:center;">
+      Visit →
+    </a>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
